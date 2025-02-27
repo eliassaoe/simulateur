@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulateur de ROI Marketing</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: var(--light);
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .results-row {
+            font-weight: bold;
+            background-color: #e8f4fd;
+        }
+        
+        .positive {
+            color: green;
+        }
+        
+        .negative {
+            color: var(--accent);
+        }
+        
+        .scenario-header {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background-color: #ddd;
+            cursor: pointer;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .tab.active {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .chart-container {
+            height: 400px;
+            margin-top: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+            
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Simulateur de ROI Marketing</h1>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" data-tab="inputs">Paramètres</div>
+            <div class="tab" data-tab="results">Résultats</div>
+            <div class="tab" data-tab="demo">Démo</div>
+        </div>
+        
+        <div id="inputs" class="tab-content active">
+            <div class="card">
+                <h2>Données Client</h2>
+                <div class="form-group">
+                    <label for="panierMoyen">Panier moyen (€)</label>
+                    <input type="number" id="panierMoyen" value="100" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="percentProfit">Pourcentage de profit (%)</label>
+                    <input type="number" id="percentProfit" value="30" min="0" max="100">
+                </div>
+                <div class="form-group">
+                    <label for="budgetPublicitaire">Budget publicitaire (€)</label>
+                    <input type="number" id="budgetPublicitaire" value="5000" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="fraisInstallation">Frais d'installation (€)</label>
+                    <input type="number" id="fraisInstallation" value="1000" min="0">
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Paramètres des Scénarios</h2>
+                
+                <table id="scenariosTable">
+                    <thead>
+                        <tr>
+                            <th>Paramètre</th>
+                            <th>Scénario 1</th>
+                            <th>Scénario 2</th>
+                            <th>Scénario 3</th>
+                            <th>Scénario 4</th>
+                            <th>Scénario 5</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>CPC (€)</td>
+                            <td><input type="number" id="cpc1" class="cpc-input" value="2" min="0" step="0.1"></td>
+                            <td><input type="number" id="cpc2" class="cpc-input" value="5" min="0" step="0.1"></td>
+                            <td><input type="number" id="cpc3" class="cpc-input" value="10" min="0" step="0.1"></td>
+                            <td><input type="number" id="cpc4" class="cpc-input" value="20" min="0" step="0.1"></td>
+                            <td><input type="number" id="cpc5" class="cpc-input" value="50" min="0" step="0.1"></td>
+                        </tr>
+                        <tr>
+                            <td>% Lead à RDV</td>
+                            <td><input type="number" id="leadToRdv1" class="lead-rdv-input" value="30" min="0" max="100"></td>
+                            <td><input type="number" id="leadToRdv2" class="lead-rdv-input" value="30" min="0" max="100"></td>
+                            <td><input type="number" id="leadToRdv3" class="lead-rdv-input" value="30" min="0" max="100"></td>
+                            <td><input type="number" id="leadToRdv4" class="lead-rdv-input" value="30" min="0" max="100"></td>
+                            <td><input type="number" id="leadToRdv5" class="lead-rdv-input" value="30" min="0" max="100"></td>
+                        </tr>
+                        <tr>
+                            <td>% RDV à vente</td>
+                            <td><input type="number" id="rdvToSale1" class="rdv-sale-input" value="30" min="0" max="100"></td>
+                            <td><input type="number" id="rdvToSale2" class="rdv-sale-input" value="30" min="0" max="100"></td>
+                            <td><input type="number" id="rdvToSale3" class="rdv-sale-input" value="30" min="0" max="100"></td>
+                            <td><input type="number" id="rdvToSale4" class="rdv-sale-input" value="30" min="0" max="100"></td>
+                            <td><input type="number" id="rdvToSale5" class="rdv-sale-input" value="30" min="0" max="100"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 20px; text-align: center;">
+                    <button id="calculateButton">Calculer les résultats</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="results" class="tab-content">
+            <div class="card">
+                <h2>Résultats de la simulation</h2>
+                
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Résultat</th>
+                            <th>Scénario 1</th>
+                            <th>Scénario 2</th>
+                            <th>Scénario 3</th>
+                            <th>Scénario 4</th>
+                            <th>Scénario 5</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Volume de leads</td>
+                            <td id="volumeLeads1">-</td>
+                            <td id="volumeLeads2">-</td>
+                            <td id="volumeLeads3">-</td>
+                            <td id="volumeLeads4">-</td>
+                            <td id="volumeLeads5">-</td>
+                        </tr>
+                        <tr>
+                            <td>Volume de RDV</td>
+                            <td id="volumeRdv1">-</td>
+                            <td id="volumeRdv2">-</td>
+                            <td id="volumeRdv3">-</td>
+                            <td id="volumeRdv4">-</td>
+                            <td id="volumeRdv5">-</td>
+                        </tr>
+                        <tr>
+                            <td>Volume de transactions</td>
+                            <td id="volumeTrans1">-</td>
+                            <td id="volumeTrans2">-</td>
+                            <td id="volumeTrans3">-</td>
+                            <td id="volumeTrans4">-</td>
+                            <td id="volumeTrans5">-</td>
+                        </tr>
+                        <tr>
+                            <td>Chiffre d'affaires (€)</td>
+                            <td id="ca1">-</td>
+                            <td id="ca2">-</td>
+                            <td id="ca3">-</td>
+                            <td id="ca4">-</td>
+                            <td id="ca5">-</td>
+                        </tr>
+                        <tr>
+                            <td>Coût total marketing (€)</td>
+                            <td id="coutTotal1">-</td>
+                            <td id="coutTotal2">-</td>
+                            <td id="coutTotal3">-</td>
+                            <td id="coutTotal4">-</td>
+                            <td id="coutTotal5">-</td>
+                        </tr>
+                        <tr class="results-row">
+                            <td>Marge (€)</td>
+                            <td id="marge1">-</td>
+                            <td id="marge2">-</td>
+                            <td id="marge3">-</td>
+                            <td id="marge4">-</td>
+                            <td id="marge5">-</td>
+                        </tr>
+                        <tr class="results-row">
+                            <td>ROI (%)</td>
+                            <td id="roi1">-</td>
+                            <td id="roi2">-</td>
+                            <td id="roi3">-</td>
+                            <td id="roi4">-</td>
+                            <td id="roi5">-</td>
+                        </tr>
+                        <tr class="results-row">
+                            <td>Coût d'acquisition client (€)</td>
+                            <td id="cac1">-</td>
+                            <td id="cac2">-</td>
+                            <td id="cac3">-</td>
+                            <td id="cac4">-</td>
+                            <td id="cac5">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div id="demo" class="tab-content">
+            <div class="card">
+                <h2>Notre Solution de Qualification des Leads</h2>
+                
+                <div class="demo-cta" style="text-align: center; margin: 30px 0;">
+                    <h3>Essayez notre Agent IA en direct</h3>
+                    <p>Cliquez sur le bouton ci-dessous pour démarrer une conversation avec notre agent IA sur WhatsApp</p>
+                    <a href="https://api.whatsapp.com/send/?phone=330756967915&text=Salut&type=phone_number&app_absent=0" target="_blank" class="whatsapp-button" style="display: inline-block; background-color: #25D366; color: white; padding: 15px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 15px;">
+                        <span style="display: flex; align-items: center; justify-content: center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="margin-right: 10px; fill: white;">
+                                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.72.045.419-.1.824z"></path>
+                                <path d="M12 0C5.373 0 0 5.373 0 12c0 6.627 5.373 12 12 12s12-5.373 12-12c0-6.627-5.373-12-12-12zm.031 23c-2.583 0-4.927-.986-6.704-2.599l-4.227 1.355 1.375-4.166C1.051 15.958 0 13.078 0 10.016 0 4.499 4.49 0 10.016 0 15.532 0 20 4.478 20 9.994c0 5.526-4.477 9.998-9.969 9.998"></path>
+                            </svg>
+                            Essayer l'Agent IA
+                        </span>
+                    </a>
+                </div>
+                
+                <div class="process-flow" style="margin: 40px 0; text-align: center;">
+                    <h3>Notre Processus de Qualification des Leads</h3>
+                    
+                    <div class="flow-diagram" style="display: flex; justify-content: space-between; align-items: center; margin: 30px auto; max-width: 900px; flex-wrap: wrap;">
+                        <!-- Meta Ads -->
+                        <div class="flow-step" style="text-align: center; flex: 1; min-width: 150px; margin: 10px;">
+                            <div class="icon-container" style="background-color: #f0f2f5; border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" style="fill: #1877F2;">
+                                    <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-3.374 17c-.897 0-1.626-.727-1.626-1.624s.729-1.624 1.626-1.624 1.626.727 1.626 1.624-.729 1.624-1.626 1.624zm3.374 0c-.897 0-1.626-.727-1.626-1.624s.729-1.624 1.626-1.624 1.626.727 1.626 1.624-.729 1.624-1.626 1.624zm3.374 0c-.897 0-1.626-.727-1.626-1.624s.729-1.624 1.626-1.624 1.626.727 1.626 1.624-.729 1.624-1.626 1.624z"/>
+                                </svg>
+                            </div>
+                            <h4 style="margin: 0 0 10px;">Meta Ads</h4>
+                            <p style="margin: 0; font-size: 14px;">Génération de leads via Facebook & Instagram</p>
+                        </div>
+                        
+                        <!-- Arrow -->
+                        <div class="flow-arrow" style="margin: 0 10px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" style="fill: var(--secondary);">
+                                <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                            </svg>
+                        </div>
+                        
+                        <!-- WhatsApp IA -->
+                        <div class="flow-step" style="text-align: center; flex: 1; min-width: 150px; margin: 10px;">
+                            <div class="icon-container" style="background-color: #e5f7ed; border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" style="fill: #25D366;">
+                                    <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.72.045.419-.1.824z"></path>
+                                </svg>
+                            </div>
+                            <h4 style="margin: 0 0 10px;">Agent IA WhatsApp</h4>
+                            <p style="margin: 0; font-size: 14px;">Répond en moins de 1 minute</p>
+                        </div>
+                        
+                        <!-- Arrow -->
+                        <div class="flow-arrow" style="margin: 0 10px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" style="fill: var(--secondary);">
+                                <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                            </svg>
+                        </div>
+                        
+                        <!-- Qualification IA -->
+                        <div class="flow-step" style="text-align: center; flex: 1; min-width: 150px; margin: 10px;">
+                            <div class="icon-container" style="background-color: #e6f7f9; border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" style="fill: var(--secondary);">
+                                    <path d="M20 3h-16c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2v-14c0-1.103-.897-2-2-2zm-16 16v-14h16l.001 14h-16.001z"></path><path d="M11 13.723l-1.835-1.88c-.196-.202-.518-.202-.714 0-.196.201-.196.53 0 .731l2.182 2.245c.097.1.225.15.353.15s.255-.05.353-.15l4.833-4.968c.198-.203.198-.531 0-.734-.196-.201-.519-.201-.715 0l-4.457 4.606z"></path>
+                                </svg>
+                            </div>
+                            <h4 style="margin: 0 0 10px;">Qualification IA</h4>
+                            <p style="margin: 0; font-size: 14px;">Pose des questions et filtre automatiquement</p>
+                        </div>
+                        
+                        <!-- Arrow -->
+                        <div class="flow-arrow" style="margin: 0 10px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" style="fill: var(--secondary);">
+                                <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                            </svg>
+                        </div>
+                        
+                        <!-- Résultat -->
+                        <div class="flow-step" style="text-align: center; flex: 1; min-width: 150px; margin: 10px;">
+                            <div class="icon-container" style="background-color: #f0f9ff; border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" style="fill: var(--secondary);">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <h4 style="margin: 0 0 10px;">Prise de RDV</h4>
+                            <p style="margin: 0; font-size: 14px;">Uniquement pour les leads qualifiés</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="benefits" style="background-color: #f9fafb; padding: 25px; border-radius: 8px; margin-top: 30px;">
+                    <h3 style="margin-top: 0;">Avantages de Notre Solution</h3>
+                    
+                    <div style="display: flex; flex-wrap: wrap; margin-top: 20px;">
+                        <div style="flex: 1; min-width: 250px; margin: 10px; display: flex; align-items: flex-start;">
+                            <div style="background-color: #e0f2fe; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 15px; flex-shrink: 0;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" style="fill: var(--secondary);">
+                                    <path d="M13 4h-2v7H4v2h7v7h2v-7h7v-2h-7z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 style="margin: 0 0 8px;">Speed to Lead</h4>
+                                <p style="margin: 0; font-size: 14px;">Réponse instantanée en moins d'1 minute, 24h/24 et 7j/7. Augmente significativement le taux de conversion.</p>
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 1; min-width: 250px; margin: 10px; display: flex; align-items: flex-start;">
+                            <div style="background-color: #e0f2fe; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 15px; flex-shrink: 0;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" style="fill: var(--secondary);">
+                                    <path d="M13 4h-2v7H4v2h7v7h2v-7h7v-2h-7z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 style="margin: 0 0 8px;">Conversation Personnalisée</h4>
+                                <p style="margin: 0; font-size: 14px;">L'agent IA s'adapte aux besoins et questions spécifiques de chaque prospect pour une expérience sur mesure.</p>
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 1; min-width: 250px; margin: 10px; display: flex; align-items: flex-start;">
+                            <div style="background-color: #e0f2fe; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 15px; flex-shrink: 0;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" style="fill: var(--secondary);">
+                                    <path d="M13 4h-2v7H4v2h7v7h2v-7h7v-2h-7z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 style="margin: 0 0 8px;">Qualification Efficace</h4>
+                                <p style="margin: 0; font-size: 14px;">Filtre automatiquement les prospects non pertinents pour concentrer vos ressources commerciales sur les leads à fort potentiel.</p>
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 1; min-width: 250px; margin: 10px; display: flex; align-items: flex-start;">
+                            <div style="background-color: #e0f2fe; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 15px; flex-shrink: 0;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" style="fill: var(--secondary);">
+                                    <path d="M13 4h-2v7H4v2h7v7h2v-7h7v-2h-7z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 style="margin: 0 0 8px;">Prise de RDV Automatisée</h4>
+                                <p style="margin: 0; font-size: 14px;">Pour les leads qualifiés, l'agent réserve directement un rendez-vous avec le commercial, optimisant ainsi votre taux de conversion.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 40px;">
+                    <h3>Prêt à transformer votre processus de génération de leads?</h3>
+                    <a href="https://api.whatsapp.com/send/?phone=330756967915&text=Je souhaite en savoir plus sur votre solution de qualification de leads&type=phone_number&app_absent=0" target="_blank" class="whatsapp-button" style="display: inline-block; background-color: #25D366; color: white; padding: 15px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 15px;">
+                        <span style="display: flex; align-items: center; justify-content: center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="margin-right: 10px; fill: white;">
+                                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.72.045.419-.1.824z"></path>
+                                <path d="M12 0C5.373 0 0 5.373 0 12c0 6.627 5.373 12 12 12s12-5.373 12-12c0-6.627-5.373-12-12-12zm.031 23c-2.583 0-4.927-.986-6.704-2.599l-4.227 1.355 1.375-4.166C1.051 15.958 0 13.078 0 10.016 0 4.499 4.49 0 10.016 0 15.532 0 20 4.478 20 9.994c0 5.526-4.477 9.998-9.969 9.998"></path>
+                            </svg>
+                            Contactez-nous
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <script>
+        // DOM elements
+        const tabButtons = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const calculateButton = document.getElementById('calculateButton');
+        
+        // Add event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners to tab buttons
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    showTab(tabId);
+                });
+            });
+            
+            // Add event listener to calculate button
+            calculateButton.addEventListener('click', calculateResults);
+            
+            // Initialize with default values
+            calculateResults();
+        });
+        
+        // Show tab
+        function showTab(tabId) {
+            // Hide all tab contents
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            tabButtons.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabId).classList.add('active');
+            
+            // Add active class to clicked tab
+            document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
+        }
+        
+        // Calculate results
+        function calculateResults() {
+            try {
+                const panierMoyen = parseFloat(document.getElementById('panierMoyen').value) || 0;
+                const percentProfit = parseFloat(document.getElementById('percentProfit').value) || 0;
+                const budgetPublicitaire = parseFloat(document.getElementById('budgetPublicitaire').value) || 0;
+                const fraisInstallation = parseFloat(document.getElementById('fraisInstallation').value) || 0;
+                
+                const coutTotalMarketing = budgetPublicitaire + fraisInstallation;
+                
+                const results = [];
+                
+                // Calculate results for each scenario
+                for (let i = 1; i <= 5; i++) {
+                    const cpc = parseFloat(document.getElementById(`cpc${i}`).value) || 0;
+                    const leadToRdv = parseFloat(document.getElementById(`leadToRdv${i}`).value) || 0;
+                    const rdvToSale = parseFloat(document.getElementById(`rdvToSale${i}`).value) || 0;
+                    
+                    // Calculate volumes
+                    const volumeLeads = cpc > 0 ? Math.floor(budgetPublicitaire / cpc) : 0;
+                    const volumeRdv = Math.floor(volumeLeads * (leadToRdv / 100));
+                    const volumeTrans = Math.floor(volumeRdv * (rdvToSale / 100));
+                    
+                    // Calculate financials
+                    const ca = volumeTrans * panierMoyen;
+                    const marge = ca * (percentProfit / 100) - coutTotalMarketing;
+                    const roi = coutTotalMarketing > 0 ? (marge / coutTotalMarketing) * 100 : 0;
+                    const cac = volumeTrans > 0 ? coutTotalMarketing / volumeTrans : 0;
+                    
+                    // Store results
+                    results.push({
+                        volumeLeads,
+                        volumeRdv,
+                        volumeTrans,
+                        ca,
+                        coutTotalMarketing,
+                        marge,
+                        roi,
+                        cac
+                    });
+                    
+                    // Update results table
+                    document.getElementById(`volumeLeads${i}`).textContent = volumeLeads.toLocaleString();
+                    document.getElementById(`volumeRdv${i}`).textContent = volumeRdv.toLocaleString();
+                    document.getElementById(`volumeTrans${i}`).textContent = volumeTrans.toLocaleString();
+                    document.getElementById(`ca${i}`).textContent = ca.toLocaleString() + ' €';
+                    document.getElementById(`coutTotal${i}`).textContent = coutTotalMarketing.toLocaleString() + ' €';
+                    
+                    const margeEl = document.getElementById(`marge${i}`);
+                    margeEl.textContent = marge.toLocaleString() + ' €';
+                    margeEl.className = marge >= 0 ? 'positive' : 'negative';
+                    
+                    const roiEl = document.getElementById(`roi${i}`);
+                    roiEl.textContent = roi.toFixed(2) + ' %';
+                    roiEl.className = roi >= 0 ? 'positive' : 'negative';
+                    
+                    document.getElementById(`cac${i}`).textContent = cac.toLocaleString() + ' €';
+                }
+                
+                // Switch to results tab
+                showTab('results');
+            } catch (error) {
+                console.error('Error calculating results:', error);
+                alert('Une erreur est survenue lors du calcul des résultats. Veuillez vérifier vos entrées.');
+            }
+        }
+    </script>
+</body>
+</html>
